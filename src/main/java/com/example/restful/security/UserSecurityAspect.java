@@ -28,6 +28,11 @@ public class UserSecurityAspect {
 		checkPermission(user.getId());
 	}
 
+	@Before("execution(* *.*(..)) && args(userId) && @annotation(com.example.restful.annotation.UserSecurityNeeded)")
+	public void checkUserPermission(long userId) {
+		checkPermission(userId);
+	}
+
 	private void checkPermission(long userId) {
 		User storedUser = userService.read(userId);
 		Authentication auth = SecurityContextHolder.getContext()
@@ -49,10 +54,4 @@ public class UserSecurityAspect {
 				+ auth.getName());
 
 	}
-
-	@Before("execution(* *.*(..)) && args(userId) && @annotation(com.example.restful.annotation.UserSecurityNeeded)")
-	public void checkUserPermission(long userId) {
-		checkPermission(userId);
-	}
-
 }

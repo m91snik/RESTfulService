@@ -51,7 +51,6 @@ public class UserServiceImpl implements UserService {
 		return userDao.delete(userId);
 	}
 
-	@UserSecurityNeeded
 	@Transactional(readOnly = true)
 	@Override
 	public Collection<User> list() {
