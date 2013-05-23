@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:sec="http://www.springframework.org/schema/security"
+	xmlns:oxm="http://www.springframework.org/schema/oxm"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-3.0.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+	<sec:authentication-manager alias="authenticationManager">
+		<sec:authentication-provider ref="customAuthenticationProvider" />
+	</sec:authentication-manager>
+
+	<bean id="customAuthenticationProvider"
+		class="com.example.restful.security.CustomAuthenticationProvider" />
+
+	<sec:http>
+		<!-- it protects from session fixation attack -->
+		<sec:session-management
+			session-fixation-protection="migrateSession" />
+		<sec:intercept-url pattern="/logged_in" access="ROLE_USER,ROLE_ADMIN" />
+		<sec:intercept-url pattern="/users/**" access="ROLE_USER,ROLE_ADMIN"
+			method="PUT" />
+		<sec:intercept-url pattern="/users/**" access="ROLE_USER,ROLE_ADMIN"
+			method="DELETE" />
+		<sec:intercept-url pattern="/users/**" access="ROLE_USER,ROLE_ADMIN"
+			method="GET" />
+		<sec:intercept-url pattern="/**" requires-channel="https" />
+		<sec:http-basic />
+		<sec:custom-filter position="FORM_LOGIN_FILTER" ref="authFilter" />
+		<sec:logout logout-url="/logout" logout-success-url="/" />
+	</sec:http>
+
+	<bean id="authFilter"
+		class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
+		<property name="authenticationManager" ref="authenticationManager" />
+		<property name="authenticationSuccessHandler" ref="successHandler" />
+		<property name="authenticationFailureHandler" ref="failureHandler" />
+		<property name="filterProcessesUrl" value="/login" />
+	</bean>
+
+	<bean id="successHandler"
+		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler">
+		<property name="defaultTargetUrl" value="/logged_in" />
+		<property name="alwaysUseDefaultTargetUrl" value="true" />
+	</bean>
+
+	<bean id="failureHandler"
+		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+		<property name="defaultFailureUrl" value="/" />
+	</bean>
+
+	<aop:aspectj-autoproxy />
+
+</beans>
