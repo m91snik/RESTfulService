@@ -22,7 +22,6 @@ public class UserSecurityAspect {
 	@Autowired
 	UserService userService;
 
-	//
 	@Before("execution(* *.*(..)) && args(user) && @annotation(com.example.restful.annotation.UserSecurityNeeded)")
 	public void checkUserPermission(User user) {
 		checkPermission(user.getId());

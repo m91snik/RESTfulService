@@ -103,4 +103,13 @@ public class UserDaoInMemoryImplTest extends BaseTest {
 		Assert.assertTrue(list.contains(user2));
 	}
 
+	@Test
+	public void testFindUserByEmail() {
+		User user1 = createTestUser();
+		user1.setId(1L);
+		userDao.getUsersMap().put(user1.getId(), user1);
+		User findUserByEmail = userDao.findUserByEmail(user1.getEmail());
+		Assert.assertEquals(user1, findUserByEmail);
+	}
+
 }

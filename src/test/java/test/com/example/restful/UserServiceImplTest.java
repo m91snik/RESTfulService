@@ -16,6 +16,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import com.example.restful.dao.UserDao;
 import com.example.restful.dom.User;
@@ -98,4 +100,18 @@ public class UserServiceImplTest extends BaseTest {
 		userService.forgotPassword(user.getId());
 		verify(mailSender).send(notNull(SimpleMailMessage.class));
 	}
+
+	@Test
+	public void testLoadUserByUsername() {
+		User user = createTestUser();
+		user.setId(1L);
+		when(userDao.findUserByEmail(user.getEmail())).thenReturn(user);
+		UserDetails userDetails = userService.loadUserByUsername(user
+				.getEmail());
+		Assert.assertEquals(user.getEmail(), userDetails.getUsername());
+		Assert.assertEquals(user.getPassword(), userDetails.getPassword());
+		Assert.assertTrue(userDetails.getAuthorities().contains(
+				new SimpleGrantedAuthority("ROLE_USER")));
+	}
+
 }
