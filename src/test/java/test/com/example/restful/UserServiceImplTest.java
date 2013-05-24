@@ -2,15 +2,14 @@ package test.com.example.restful;
 
 import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,93 +18,98 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.example.restful.dao.UserDao;
 import com.example.restful.dom.User;
-import com.example.restful.service.UserService;
+import com.example.restful.exception.UserServiceException;
+import com.example.restful.repository.UserRepository;
+import com.example.restful.service.UserServiceImpl;
 
+// integration test for user service
 public class UserServiceImplTest extends BaseTest {
 
-	@Mock
 	@Autowired
-	UserDao userDao;
+	UserRepository userRepository;
 
 	@Mock
-	@Autowired
 	MailSender mailSender;
 
-	@Autowired
-	@InjectMocks
-	UserService userService;
+	private final UserServiceImpl userService = new UserServiceImpl();
 
 	@Before
 	public void initMocks() {
 		MockitoAnnotations.initMocks(this);
+		userRepository.deleteAll();
+		userService.setMailSender(mailSender);
+		userService.setUserRepository(userRepository);
 	}
+
+	// NOTE: assume that spring crud repository works fine
 
 	@Test
 	public void testCreate() {
 		User user = createTestUser();
-		when(userDao.create(user)).thenReturn(user);
 		User createdUser = userService.create(user);
-		Assert.assertEquals(user, createdUser);
+		User storedUser = userRepository.findOne(createdUser.getId());
+		Assert.assertEquals(storedUser, createdUser);
+		assertUsersEqualsExceptId(user, storedUser);
 	}
 
 	@Test
 	public void testRead() {
 		User user = createTestUser();
-		user.setId(1L);
-		when(userDao.read(user.getId())).thenReturn(user);
-		User readUser = userService.read(user.getId());
-		Assert.assertEquals(user, readUser);
+		User savedUser = userRepository.save(user);
+		User readUser = userService.find(savedUser.getId());
+		Assert.assertEquals(savedUser, readUser);
 	}
 
 	@Test
 	public void testUpdate() {
 		User user = createTestUser();
-		user.setId(1L);
+		User savedUser = userRepository.save(user);
 		User expectedUser = createTestUser("_exp");
-		expectedUser.setId(user.getId());
-		when(userDao.update(user)).thenReturn(expectedUser);
-		User oldUser = userService.update(user);
-		Assert.assertEquals(expectedUser, oldUser);
+		expectedUser.setId(savedUser.getId());
+		User updatedUser = userService.update(expectedUser);
+		Assert.assertEquals(expectedUser, updatedUser);
+	}
+
+	@Test(expected = UserServiceException.class)
+	public void testUpdateWithDuplicatedEmail() {
+		User user = createTestUser("1");
+		User savedUser = userRepository.save(user);
+		User user2 = createTestUser("2");
+		User savedUser2 = userRepository.save(user2);
+		savedUser2.setEmail(savedUser.getEmail());
+		userService.update(savedUser2);
 	}
 
 	@Test
 	public void testDelete() {
 		User user = createTestUser();
-		user.setId(1L);
-		when(userDao.delete(user.getId())).thenReturn(user);
-		User deletedUser = userService.delete(user.getId());
-		Assert.assertEquals(user, deletedUser);
+		User savedUser = userRepository.save(user);
+		userService.delete(savedUser.getId());
+		Assert.assertNull(userRepository.findOne(savedUser.getId()));
 	}
 
 	@Test
 	public void testList() {
 		User user = createTestUser("1");
-		user.setId(1L);
 		User user2 = createTestUser("2");
-		user2.setId(2L);
-		when(userDao.list()).thenReturn(Arrays.asList(user, user2));
+		List<User> savedUsers = userRepository.save(Arrays.asList(user, user2));
 		Collection<User> list = userService.list();
-		Assert.assertEquals(2, list.size());
-		Assert.assertTrue(list.contains(user));
-		Assert.assertTrue(list.contains(user2));
+		Assert.assertEquals(savedUsers, list);
 	}
 
 	@Test
 	public void testForgotPassword() {
 		User user = createTestUser();
-		user.setId(1L);
-		when(userDao.read(user.getId())).thenReturn(user);
-		userService.forgotPassword(user.getId());
+		userRepository.save(user);
+		userService.forgotPassword(user.getEmail());
 		verify(mailSender).send(notNull(SimpleMailMessage.class));
 	}
 
 	@Test
 	public void testLoadUserByUsername() {
 		User user = createTestUser();
-		user.setId(1L);
-		when(userDao.findUserByEmail(user.getEmail())).thenReturn(user);
+		userRepository.save(user);
 		UserDetails userDetails = userService.loadUserByUsername(user
 				.getEmail());
 		Assert.assertEquals(user.getEmail(), userDetails.getUsername());

@@ -9,13 +9,13 @@ import com.example.restful.dom.User;
 public interface UserService extends UserDetailsService {
 	User create(User user);
 
-	User read(long userId);
+	User find(long userId);
 
 	User update(User user);
 
-	User delete(long userId);
+	void delete(long userId);
 
 	Collection<User> list();
 
-	void forgotPassword(long userId);
+	void forgotPassword(String email);
 }

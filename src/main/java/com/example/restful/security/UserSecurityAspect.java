@@ -6,10 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.example.restful.dom.User;
+import com.example.restful.exception.UserServiceException;
 import com.example.restful.service.UserService;
 
 @Aspect
@@ -33,23 +35,27 @@ public class UserSecurityAspect {
 	}
 
 	private void checkPermission(long userId) {
-		User storedUser = userService.read(userId);
+
 		Authentication auth = SecurityContextHolder.getContext()
 				.getAuthentication();
 		if (auth == null) {
-			LOGGER.warn("Access is forbidden for not authentacated user with user "
-					+ storedUser.getEmail());
-			throw new SecurityException(
-					"Access is forbidden for not authentacated user");
+			LOGGER.warn("Access is forbidden for not authentacated user with userId "
+					+ userId);
+			throw new UserServiceException(
+					"Access is forbidden for not authenticated user");
 		}
-		if (auth.getAuthorities().contains("ROLE_ADMIN")
-				|| auth.getName().equals(storedUser.getEmail())) {
+		if (auth.getAuthorities().contains(
+				new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+			return;
+		}
+		User storedUser = userService.find(userId);
+		if (auth.getName().equals(storedUser.getEmail())) {
 			return;
 		}
 
 		LOGGER.warn("Forbidden operation for user " + auth.getName()
 				+ " with user " + storedUser.getEmail());
-		throw new SecurityException("Forbidden operation for user "
+		throw new UserServiceException("Forbidden operation for user "
 				+ auth.getName());
 
 	}

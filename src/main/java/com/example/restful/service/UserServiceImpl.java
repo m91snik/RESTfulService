@@ -15,51 +15,65 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.restful.annotation.UserSecurityNeeded;
-import com.example.restful.dao.UserDao;
 import com.example.restful.dom.User;
+import com.example.restful.exception.UserServiceException;
+import com.example.restful.repository.UserRepository;
 
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
 
 	@Autowired
-	UserDao userDao;
+	private UserRepository userRepository;
 
 	@Autowired
-	MailSender mailSender;
+	private MailSender mailSender;
 
 	@Override
 	public User create(User user) {
-		return userDao.create(user);
+		if (getUserRepository().findOneByEmail(user.getEmail()) != null) {
+			throw new UserServiceException("Duplicated email");
+		}
+		return getUserRepository().save(user);
 	}
 
 	@Transactional(readOnly = true)
 	@Override
-	public User read(long userId) {
-		return userDao.read(userId);
+	public User find(long userId) {
+		return getUserRepository().findOne(userId);
 	}
 
 	@UserSecurityNeeded
 	@Override
 	public User update(User user) {
-		return userDao.update(user);
+		User storedUser = getUserRepository().findOne(user.getId());
+		if (storedUser == null) {
+			throw new UserServiceException("No such user exists");
+		}
+		User userWithTheSameEmail = getUserRepository().findOneByEmail(
+				user.getEmail());
+		if (userWithTheSameEmail != null
+				&& !storedUser.getId().equals(userWithTheSameEmail.getId())) {
+			throw new UserServiceException("Duplicated email");
+		}
+		return getUserRepository().save(user);
 	}
 
 	@UserSecurityNeeded
 	@Override
-	public User delete(long userId) {
-		return userDao.delete(userId);
+	public void delete(long userId) {
+		getUserRepository().delete(userId);
 	}
 
 	@Transactional(readOnly = true)
 	@Override
 	public Collection<User> list() {
-		return userDao.list();
+		return getUserRepository().findAll();
 	}
 
 	@Override
-	public void forgotPassword(long userId) {
-		User user = read(userId);
+	public void forgotPassword(String email) {
+		User user = getUserRepository().findOneByEmail(email);
 		if (user == null) {
 			throw new RuntimeException("No user find for specified id");
 		}
@@ -68,14 +82,14 @@ public class UserServiceImpl implements UserService {
 		// NOTE: can be extracted to messages file
 		simpleMailMessage.setSubject("Your password for RESTfulService");
 		simpleMailMessage.setText("Hi. Your password is " + user.getPassword());
-		mailSender.send(simpleMailMessage);
+		getMailSender().send(simpleMailMessage);
 	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username)
 			throws UsernameNotFoundException {
 		// NOTE: username==email
-		User user = userDao.findUserByEmail(username);
+		User user = getUserRepository().findOneByEmail(username);
 		if (user == null) {
 			throw new UsernameNotFoundException(username + " was not found");
 		}
@@ -83,6 +97,22 @@ public class UserServiceImpl implements UserService {
 		authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 		return new org.springframework.security.core.userdetails.User(
 				user.getEmail(), user.getPassword(), authorities);
+	}
+
+	public UserRepository getUserRepository() {
+		return userRepository;
+	}
+
+	public void setUserRepository(UserRepository userRepository) {
+		this.userRepository = userRepository;
+	}
+
+	public MailSender getMailSender() {
+		return mailSender;
+	}
+
+	public void setMailSender(MailSender mailSender) {
+		this.mailSender = mailSender;
 	}
 
 }

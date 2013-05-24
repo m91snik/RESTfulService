@@ -38,8 +38,8 @@ public class HomeController {
 
 	@RequestMapping(value = "/forgotPassword", method = RequestMethod.GET)
 	public @ResponseBody
-	void forgotPassword(@RequestParam Integer userId) {
-		userService.forgotPassword(userId);
+	void forgotPassword(@RequestParam String email) {
+		userService.forgotPassword(email);
 	}
 
 	@ExceptionHandler(Exception.class)

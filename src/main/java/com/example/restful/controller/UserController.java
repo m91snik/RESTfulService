@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.example.restful.dom.User;
+import com.example.restful.exception.UserServiceException;
 import com.example.restful.service.UserService;
 
 @Controller
@@ -40,9 +41,9 @@ public class UserController {
 
 	@RequestMapping(value = "/{userId}", method = RequestMethod.GET)
 	@ResponseBody
-	public User read(@PathVariable(value = "userId") long userId) {
+	public User find(@PathVariable(value = "userId") long userId) {
 		LOGGER.info("Reading user with id {}", userId);
-		return userService.read(userId);
+		return userService.find(userId);
 	}
 
 	@RequestMapping(value = "/{userId}", method = RequestMethod.PUT)
@@ -81,6 +82,15 @@ public class UserController {
 	@ResponseBody
 	public String handleServerErrors(Exception ex) {
 		LOGGER.error(ex.getMessage(), ex);
+		return "An internal server error occured";
+	}
+
+	@ExceptionHandler(UserServiceException.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseBody
+	public String handleDataAccessErrors(UserServiceException ex) {
+		LOGGER.error(ex.getMessage(), ex);
 		return ex.getMessage();
+
 	}
 }

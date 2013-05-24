@@ -1,5 +1,7 @@
 package test.com.example.restful;
 
+import junit.framework.Assert;
+
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -23,5 +25,12 @@ public class BaseTest {
 
 	protected User createTestUser() {
 		return createTestUser("");
+	}
+
+	protected void assertUsersEqualsExceptId(User expected, User real) {
+		Assert.assertEquals(expected.getEmail(), real.getEmail());
+		Assert.assertEquals(expected.getPassword(), real.getPassword());
+		Assert.assertEquals(expected.getFirstName(), real.getFirstName());
+		Assert.assertEquals(expected.getLastName(), real.getLastName());
 	}
 }
