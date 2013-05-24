@@ -82,7 +82,7 @@ public class UserController {
 	@ResponseBody
 	public String handleServerErrors(Exception ex) {
 		LOGGER.error(ex.getMessage(), ex);
-		return "An internal server error occured";
+		return "An internal server error occured:" + ex.getMessage();
 	}
 
 	@ExceptionHandler(UserServiceException.class)
