@@ -23,6 +23,8 @@
 
 	<mvc:annotation-driven />
 
+	<mvc:resources location="/pages/" mapping="/**" />
+
 	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
 		<property name="host" value="${email.server}" />
 		<property name="port" value="${email.port}" />

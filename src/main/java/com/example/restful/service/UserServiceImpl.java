@@ -75,7 +75,8 @@ public class UserServiceImpl implements UserService {
 	public void forgotPassword(String email) {
 		User user = getUserRepository().findOneByEmail(email);
 		if (user == null) {
-			throw new RuntimeException("No user find for specified id");
+			throw new RuntimeException("No user with email " + email
+					+ " exists");
 		}
 		SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
 		simpleMailMessage.setCc(user.getEmail());
@@ -113,6 +114,11 @@ public class UserServiceImpl implements UserService {
 
 	public void setMailSender(MailSender mailSender) {
 		this.mailSender = mailSender;
+	}
+
+	@Override
+	public User findByUsername(String username) {
+		return getUserRepository().findOneByEmail(username);
 	}
 
 }

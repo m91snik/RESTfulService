@@ -118,4 +118,12 @@ public class UserServiceImplTest extends BaseTest {
 				new SimpleGrantedAuthority("ROLE_USER")));
 	}
 
+	@Test
+	public void testFindByUsername() {
+		User user = createTestUser();
+		User savedUser = userRepository.save(user);
+		User foundUser = userService.findByUsername(user.getEmail());
+		Assert.assertEquals(savedUser, foundUser);
+	}
+
 }

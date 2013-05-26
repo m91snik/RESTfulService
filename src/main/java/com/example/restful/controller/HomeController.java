@@ -1,9 +1,15 @@
 package com.example.restful.controller;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.example.restful.dom.User;
 import com.example.restful.service.UserService;
 
 @Controller
@@ -31,12 +38,19 @@ public class HomeController {
 	}
 
 	@RequestMapping(value = "/logged_in")
-	@ResponseBody
-	public String afterLogin() {
-		return "You are successfully logged in";
+	public String afterLogin(HttpServletResponse response) {
+		Authentication authentication = SecurityContextHolder.getContext()
+				.getAuthentication();
+		if (authentication.getAuthorities().contains(
+				new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+			return "redirect:/admin.html";
+		}
+		User user = userService.findByUsername(authentication.getName());
+		response.addCookie(new Cookie("user_id", user.getId() + ""));
+		return "redirect:/user.html";
 	}
 
-	@RequestMapping(value = "/forgotPassword", method = RequestMethod.GET)
+	@RequestMapping(value = "/forgot_password", method = RequestMethod.GET)
 	public @ResponseBody
 	void forgotPassword(@RequestParam String email) {
 		userService.forgotPassword(email);

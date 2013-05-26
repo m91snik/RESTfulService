@@ -34,10 +34,12 @@
 			method="GET" />
 		<sec:intercept-url pattern="/users/**" access="ROLE_ADMIN"
 			method="POST" />
+		<sec:intercept-url pattern="/admin.html" access="ROLE_ADMIN"/>
+		<sec:intercept-url pattern="/user.html" access="ROLE_USER"/>
 		<!-- sec:intercept-url pattern="/**" requires-channel="https" /-->
 		<sec:http-basic />
 		<sec:custom-filter position="FORM_LOGIN_FILTER" ref="authFilter" />
-		<sec:logout logout-url="/logout" logout-success-url="/" />
+		<sec:logout logout-url="/logout" logout-success-url="/login.html" />
 	</sec:http>
 
 	<bean id="authFilter"
@@ -56,7 +58,7 @@
 
 	<bean id="failureHandler"
 		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
-		<property name="defaultFailureUrl" value="/" />
+		<property name="defaultFailureUrl" value="/login.html" />
 	</bean>
 
 	<aop:aspectj-autoproxy />
