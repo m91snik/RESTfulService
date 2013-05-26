@@ -32,9 +32,8 @@ public class HomeController {
 	UserService userService;
 
 	@RequestMapping(method = RequestMethod.GET)
-	@ResponseBody
-	public String create() {
-		return "You are not logged in. Login using /login";
+	public String defaultPage() {
+		return "redirect:/login.html";
 	}
 
 	@RequestMapping(value = "/logged_in")

@@ -32,6 +32,24 @@ $(document).ready(function() {
 			}
 		});
 	});
+	
+	$("#delete_user").click(function(){
+		if(!confirm("Are you sure?")){
+			return;
+		}
+		$.ajax({
+			url : "users/" + userId,
+			type : "DELETE",
+			success : function(user) {
+				alert("Your account was deleted");
+				location.href = "logout";
+			},
+			error : function(data) {
+				alert(data.responseText);
+			}
+		});
+	});
+	
 	$.getJSON("users/" + userId, function(user) {
 		fillFields(user);
 	});

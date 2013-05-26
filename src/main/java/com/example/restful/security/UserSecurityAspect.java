@@ -49,14 +49,12 @@ public class UserSecurityAspect {
 			return;
 		}
 		User storedUser = userService.find(userId);
-		if (auth.getName().equals(storedUser.getEmail())) {
-			return;
+		if (storedUser == null || !auth.getName().equals(storedUser.getEmail())) {
+			LOGGER.warn("Forbidden operation for user " + auth.getName()
+					+ " with user " + storedUser.getEmail());
+			throw new UserServiceException("Forbidden operation for user "
+					+ auth.getName());
 		}
-
-		LOGGER.warn("Forbidden operation for user " + auth.getName()
-				+ " with user " + storedUser.getEmail());
-		throw new UserServiceException("Forbidden operation for user "
-				+ auth.getName());
 
 	}
 }
