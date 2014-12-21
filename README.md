@@ -10,3 +10,10 @@ Example of RESTful service based on Spring MVC, security, aop.
 5. use /users/{user_id} DELETE to delete use if you are logged in
 6. use /logout to logout
 7. use /forgotPassword?userId={user_id} to get password on email
+
+You can register new users under admin account. 
+1. Login using admin username/password from config.properties
+2. Create account for new user
+3. Now you can login under new user or use forgot password (need to configure gmail account before)
+ 
+Also, in this project aspects are used to restrict permissions to some services.
